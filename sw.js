@@ -1,4 +1,4 @@
-const C = "handye-eco-finance-v2";
+const C = "handye-eco-finance-v3";
 const FILES = ["./", "index.html", "manifest.json", "icon.svg"];
 self.addEventListener("install", e => { self.skipWaiting(); e.waitUntil(caches.open(C).then(c => c.addAll(FILES))); });
 self.addEventListener("activate", e => e.waitUntil(

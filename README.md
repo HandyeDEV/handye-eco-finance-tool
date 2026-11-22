@@ -12,6 +12,8 @@ Feito com HTML5, CSS3 e JavaScript puro (sem frameworks nem dependências). É u
 - **Gastos mensais:** categorias editáveis, total e gráfico de pizza com a porcentagem de cada uma.
 - **Meta com prazo:** informa quanto guardar por mês, quanto você terá se guardar toda a sobra, e em quanto tempo chega lá. Usa juros compostos e mostra um gráfico da evolução.
 - **Regra 50/30/20:** compara seus gastos e sua poupança com essa referência.
+- **Planilha de freelancer:** registre o que recebeu em cada dia (data, cliente/serviço e valor), escolha o mês e veja total, dias trabalhados, média por dia e melhor dia. Dá para usar o total do mês como "Outros ganhos", baixar a planilha em CSV (abre no Excel e no Google Planilhas) e importar CSV.
+- **Exportar e importar dados:** baixe todos os seus dados em um arquivo .json e importe em outro computador ou no celular. O arquivo é lido só no navegador e os dados importados são validados.
 - **Privacidade:** os dados ficam salvos só no seu aparelho (`localStorage`). Nada é enviado a servidor.
 - **Bolinhas de ajuda (i):** passe o mouse ou toque na bolinha ao lado de termos como INSS, IRRF, dependentes, 13º, juros compostos e regra 50/30/20 para ver o que significam. Toque de novo, clique fora ou aperte Esc para fechar.
 - Tema claro e escuro, layout responsivo e acessível (foco visível, rótulos nos campos).
@@ -22,7 +24,9 @@ Feito com HTML5, CSS3 e JavaScript puro (sem frameworks nem dependências). É u
 2. **Seus gastos:** ajuste os valores de cada categoria ou clique em **+ Adicionar gasto**. Use o ✕ para remover. A barra do topo mostra **Líquido, Gastos e Sobra** o tempo todo.
 3. **Seu objetivo:** informe quanto quer acumular, em quantos meses, quanto já tem guardado e o rendimento esperado ao ano (use 0 para ignorar juros). O app diz quanto guardar por mês e se isso cabe na sua sobra. Se não couber, mostra quanto falta.
 4. **Regra 50/30/20:** veja se seus gastos estão abaixo de 80% da renda e se a sobra chega a 20%.
-5. **Limpar tudo** apaga seus dados e volta tudo para zero.
+5. **Planilha de freelancer:** informe data, cliente (opcional) e valor e toque em **+**. Troque o mês no seletor para ver outros meses. Os valores também podem ser editados direto na lista.
+6. **Exportar e importar:** no fim da página, **Exportar todos os dados** baixa um .json; **Importar dados** lê esse arquivo e substitui os dados atuais (o app pergunta antes).
+7. **Limpar tudo** apaga seus dados e volta tudo para zero.
 
 ### Exemplo
 

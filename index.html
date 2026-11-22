@@ -74,6 +74,16 @@ svg{width:100%;height:auto;display:block}
 .tip:hover,.tip[aria-expanded="true"]{background:var(--brand);color:var(--brand-ink)}
 #tipbox{position:fixed;z-index:50;background:var(--ink);color:var(--bg);padding:10px 12px;border-radius:10px;font-size:.85rem;line-height:1.4;font-weight:400;box-shadow:0 6px 20px rgba(0,0,0,.3)}
 #tipbox b{display:block;margin-bottom:2px}
+.frow{display:grid;grid-template-columns:150px 1fr 120px 44px;gap:8px;margin-bottom:8px;align-items:center}
+.frow button{padding:0}
+.fhead{font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;margin-bottom:4px}
+.fnovo{margin-bottom:0}
+@media (max-width:560px){
+  .frow{grid-template-columns:1fr 1fr 44px}
+  .frow input[type=text]{grid-column:1/-1;order:4}
+  .fhead{display:none}
+}
+.vazio{color:var(--muted);font-size:.9rem;padding:8px 0}
 </style>
 </head>
 <body>
@@ -138,10 +148,45 @@ svg{width:100%;height:auto;display:block}
   <p class="note">Sugestão: 50% necessidades, 30% desejos, 20% poupança. Aqui, "poupança" é a sua sobra mensal. É só uma referência, não uma regra rígida.</p>
 </section>
 
+<section class="card" aria-labelledby="t5">
+  <h2 id="t5">5. Planilha de freelancer: rendimentos por dia <i data-tip-slot="freela"></i></h2>
+  <p class="sub" style="margin-bottom:12px">Anote o que você recebeu em cada dia. O app soma o mês e mostra sua média.</p>
+  <form id="f-form" class="frow fnovo" autocomplete="off">
+    <input id="f-d" type="date" aria-label="Data do rendimento" required>
+    <input id="f-c" type="text" maxlength="60" aria-label="Cliente ou serviço" placeholder="Cliente / serviço (opcional)">
+    <input id="f-v" type="number" inputmode="decimal" min="0.01" step="0.01" aria-label="Valor recebido em reais" placeholder="R$" required>
+    <button class="primary" type="submit" aria-label="Adicionar rendimento">+</button>
+  </form>
+  <div style="margin:14px 0 8px"><label for="f-m">Mês</label><select id="f-m"></select></div>
+  <div class="frow fhead" aria-hidden="true"><span>Data</span><span>Cliente / serviço</span><span>Valor</span><span></span></div>
+  <div id="f-lista"></div>
+  <div class="lines" style="margin-top:12px" id="f-res"></div>
+  <div class="tools" style="margin-top:12px">
+    <button id="f-usar" type="button">Usar o total do mês em "Outros ganhos"</button>
+    <button id="f-csv" type="button">Baixar planilha (CSV)</button>
+    <button id="f-imp" type="button">Importar planilha (CSV)</button>
+    <input id="f-arq" type="file" accept=".csv,text/csv,text/plain" hidden>
+  </div>
+  <p class="note" id="f-msg" role="status" aria-live="polite"></p>
+  <p class="note">O CSV abre no Excel, Google Planilhas e LibreOffice. Para importar, use colunas na ordem Data, Cliente/serviço e Valor (datas como 31/12/2026 ou 2026-12-31). Importar soma as linhas às que você já tem.</p>
+</section>
+
+<section class="card" aria-labelledby="t6">
+  <h2 id="t6">6. Seus dados: exportar e importar</h2>
+  <p class="sub" style="margin-bottom:12px">Tudo fica salvo só neste aparelho. Baixe um arquivo para guardar uma cópia ou para levar seus dados do computador para o celular (e o contrário).</p>
+  <div class="tools">
+    <button id="bk-exp" class="primary" type="button">Exportar todos os dados</button>
+    <button id="bk-imp" type="button">Importar dados</button>
+    <input id="bk-arq" type="file" accept=".json,application/json" hidden>
+  </div>
+  <p class="note" id="bk-msg" role="status" aria-live="polite"></p>
+  <p class="note">O arquivo .json inclui salário, gastos, meta e a planilha de freelancer. Importar substitui os dados que estão aqui agora. O arquivo não é enviado a nenhum servidor: é lido só no seu navegador.</p>
+</section>
+
 <div class="tools">
   <button id="reset" type="button">Limpar tudo</button>
 </div>
-<p class="note">Os cálculos de INSS e IR são estimativas (tabelas no início do arquivo, fáceis de atualizar). Não é consultoria financeira. Os dados ficam só neste aparelho.</p>
+<p class="note">Os cálculos de INSS e IR são estimativas (tabelas no início do arquivo, fáceis de atualizar). Não é consultoria financeira. Os dados ficam só neste aparelho; use "Exportar" para guardar uma cópia.</p>
 </main>
 </div>
 
@@ -205,18 +250,32 @@ const DEFAULT = {
     {n:"Moradia (aluguel/financiamento)",v:0},{n:"Mercado",v:0},{n:"Transporte",v:0},
     {n:"Contas (luz, água, internet)",v:0},{n:"Lazer",v:0},{n:"Saúde",v:0}
   ],
-  meta:{valor:0, meses:0, inicial:0, rend:0}
+  meta:{valor:0, meses:0, inicial:0, rend:0},
+  freela:[] // {d:"AAAA-MM-DD", c:"cliente/serviço", v:valor}
 };
 const KEY="handye-eco-finance-v1";
-let S;
-try{ S = JSON.parse(localStorage.getItem(KEY)) || null; }catch(e){ S=null; }
-if(!S) S = JSON.parse(JSON.stringify(DEFAULT));
-if(S.tipoRenda!=="liquido") S.tipoRenda="bruto";
-function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
-
 const $ = s=>document.querySelector(s);
 const brl = v=> (isFinite(v)?v:0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
-const num = v=>{const n=parseFloat(v);return isFinite(n)&&n>=0?n:0};
+const num = v=>{const n=parseFloat(v);return isFinite(n)&&n>=0&&n<1e12?n:0};
+function dataValida(s){
+  if(typeof s!=="string"||!/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
+  const [a,m,d]=s.split("-").map(Number), t=new Date(a,m-1,d);
+  return t.getFullYear()===a&&t.getMonth()===m-1&&t.getDate()===d;
+}
+/* Valida e limpa qualquer dado vindo do armazenamento ou de um arquivo importado */
+function limpar(o){
+  const d=JSON.parse(JSON.stringify(DEFAULT));
+  if(!o||typeof o!=="object") return d;
+  d.tipoRenda=o.tipoRenda==="liquido"?"liquido":"bruto";
+  ["bruto","dependentes","outrosDesc","extras"].forEach(k=>d[k]=num(o[k]));
+  if(Array.isArray(o.gastos)) d.gastos=o.gastos.slice(0,100).filter(g=>g&&typeof g==="object").map(g=>({n:String(g.n||"").slice(0,60),v:num(g.v)}));
+  if(o.meta&&typeof o.meta==="object") ["valor","meses","inicial","rend"].forEach(k=>d.meta[k]=num(o.meta[k]));
+  if(Array.isArray(o.freela)) d.freela=o.freela.slice(0,5000).filter(f=>f&&dataValida(f.d)).map(f=>({d:f.d,c:String(f.c||"").slice(0,60),v:Math.round(num(f.v)*100)/100}));
+  return d;
+}
+let S;
+try{ S = limpar(JSON.parse(localStorage.getItem(KEY))); }catch(e){ S=limpar(null); }
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
 const COLORS=["#0f766e","#2563eb","#d97706","#9333ea","#dc2626","#0891b2","#65a30d","#db2777","#64748b","#ca8a04"];
 
 /* ====== BOLINHAS DE AJUDA ====== */
@@ -234,6 +293,7 @@ const TIPS={
   guardado:{t:"Já tenho guardado",d:"Dinheiro que você já separou para esta meta. Ele também rende juros ao longo do prazo."},
   rend:{t:"Rendimento ao ano",d:"Quanto o dinheiro guardado rende por ano (poupança, CDB, Tesouro Direto…). Use 0 para ignorar rendimento. É só uma estimativa: o rendimento real varia."},
   juros:{t:"Juros compostos",d:"Os rendimentos também passam a render: é o chamado juros sobre juros. Por isso guardar cedo e com constância faz tanta diferença."},
+  freela:{t:"Planilha de freelancer",d:"Para quem recebe por dia ou por serviço. Registre cada recebimento com a data e o valor; o app soma o mês, conta os dias trabalhados e calcula a média por dia. Lembre que renda de autônomo não tem 13º, férias nem INSS retido: separe uma reserva."},
   r5030:{t:"Regra 50/30/20",d:"Referência simples para dividir a renda líquida: 50% para necessidades (moradia, comida, contas), 30% para desejos (lazer) e 20% para poupar ou investir."}
 };
 function tipBtn(k){ const t=TIPS[k]; return `<button type="button" class="tip" data-tip="${k}" aria-label="O que é ${t.t}?" aria-expanded="false">i</button>`; }
@@ -401,12 +461,152 @@ function renderRule(c){
   box.appendChild(ideal);
 }
 
+/* ====== ARQUIVOS (baixar / ler) ====== */
+function baixar(nome,texto,tipo){
+  const a=document.createElement("a"), url=URL.createObjectURL(new Blob([texto],{type:tipo}));
+  a.href=url; a.download=nome; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),2000);
+}
+function lerArquivo(input,cb,msgEl){
+  const f=input.files&&input.files[0]; input.value="";
+  if(!f) return;
+  if(f.size>5*1024*1024){ msgEl.textContent="Arquivo grande demais (máximo 5 MB)."; return; }
+  const r=new FileReader();
+  r.onload=()=>cb(String(r.result||""));
+  r.onerror=()=>{ msgEl.textContent="Não consegui ler o arquivo."; };
+  r.readAsText(f);
+}
+const hoje=()=>{const t=new Date(),p=n=>String(n).padStart(2,"0");return `${t.getFullYear()}-${p(t.getMonth()+1)}-${p(t.getDate())}`};
+const dataBR=iso=>iso.split("-").reverse().join("/");
+const MESES=["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
+
+/* ====== PLANILHA FREELANCER ====== */
+let FM=hoje().slice(0,7);
+function renderFreela(){
+  const meses=new Set(S.freela.map(f=>f.d.slice(0,7))); meses.add(hoje().slice(0,7)); meses.add(FM);
+  const sel=$("#f-m"); sel.replaceChildren();
+  [...meses].sort().reverse().forEach(m=>{
+    const o=document.createElement("option"); o.value=m; o.textContent=MESES[+m.slice(5)-1]+" de "+m.slice(0,4); sel.appendChild(o);
+  });
+  sel.value=FM;
+  const box=$("#f-lista"); box.replaceChildren();
+  const itens=S.freela.filter(f=>f.d.slice(0,7)===FM).sort((a,b)=>a.d<b.d?1:a.d>b.d?-1:0);
+  if(!itens.length){ const p=document.createElement("p"); p.className="vazio"; p.textContent="Nenhum rendimento neste mês ainda."; box.appendChild(p); }
+  itens.forEach(f=>{
+    const r=document.createElement("div"); r.className="frow";
+    r.innerHTML=`<input type="date" aria-label="Data" required><input type="text" maxlength="60" aria-label="Cliente ou serviço" placeholder="Cliente / serviço"><input type="number" inputmode="decimal" min="0" step="0.01" aria-label="Valor em reais"><button type="button" aria-label="Remover este rendimento">✕</button>`;
+    const [d,c,v,b]=r.children;
+    d.value=f.d; c.value=f.c; v.value=f.v;
+    d.onchange=()=>{ if(dataValida(d.value)){ f.d=d.value; FM=f.d.slice(0,7); save(); renderFreela(); } else d.value=f.d; };
+    c.oninput=()=>{ f.c=c.value.slice(0,60); save(); };
+    v.oninput=()=>{ f.v=Math.round(num(v.value)*100)/100; save(); resumoFreela(); };
+    b.onclick=()=>{ S.freela.splice(S.freela.indexOf(f),1); save(); renderFreela(); };
+    box.appendChild(r);
+  });
+  resumoFreela();
+}
+function resumoFreela(){
+  const itens=S.freela.filter(f=>f.d.slice(0,7)===FM&&f.v>0);
+  const tot=itens.reduce((a,f)=>a+f.v,0);
+  const dias=new Set(itens.map(f=>f.d)).size;
+  const porDia={}; itens.forEach(f=>{porDia[f.d]=(porDia[f.d]||0)+f.v});
+  const maior=Math.max(0,...Object.values(porDia));
+  $("#f-res").innerHTML=`
+    <div><span>Dias com rendimento</span><span>${dias}</span></div>
+    <div><span>Média por dia trabalhado</span><span>${brl(dias?tot/dias:0)}</span></div>
+    <div><span>Melhor dia</span><span>${brl(maior)}</span></div>
+    <div class="tot"><span>Total do mês</span><span class="pos">${brl(tot)}</span></div>`;
+  $("#f-usar").disabled=!tot;
+}
+function csvCell(x){
+  let s=String(x); if(/^[=+\-@\t\r]/.test(s)) s="'"+s;
+  return /[";\n\r]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;
+}
+function parseCSV(txt){
+  txt=txt.replace(/^﻿/,"");
+  const first=txt.split(/\r?\n/)[0]||"";
+  const sep=first.includes(";")?";":first.includes("\t")?"\t":",";
+  const rows=[]; let row=[],cur="",q=false;
+  for(let i=0;i<txt.length;i++){
+    const ch=txt[i];
+    if(q){ if(ch==='"'){ if(txt[i+1]==='"'){cur+='"';i++} else q=false; } else cur+=ch; }
+    else if(ch==='"') q=true;
+    else if(ch===sep){ row.push(cur); cur=""; }
+    else if(ch==="\n"||ch==="\r"){ if(ch==="\r"&&txt[i+1]==="\n") i++; row.push(cur); cur=""; if(row.some(x=>x.trim()!=="")) rows.push(row); row=[]; }
+    else cur+=ch;
+  }
+  row.push(cur); if(row.some(x=>x.trim()!=="")) rows.push(row);
+  return rows;
+}
+function dataDoCSV(s){
+  s=s.trim(); let m;
+  if((m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/))) s=`${m[3]}-${m[2].padStart(2,"0")}-${m[1].padStart(2,"0")}`;
+  else if((m=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/))) s=`${m[1]}-${m[2].padStart(2,"0")}-${m[3].padStart(2,"0")}`;
+  return dataValida(s)?s:null;
+}
+function valorDoCSV(s){
+  s=String(s).replace(/[R$\s]/g,"");
+  if(s.includes(",")) s=s.replace(/\./g,"").replace(",",".");
+  return Math.round(num(s)*100)/100;
+}
+
 /* ====== EVENTOS ====== */
+$("#f-d").value=hoje();
+$("#f-form").addEventListener("submit",e=>{
+  e.preventDefault();
+  const d=$("#f-d").value, v=Math.round(num($("#f-v").value)*100)/100;
+  if(!dataValida(d)||v<=0){ $("#f-msg").textContent="Informe a data e um valor maior que zero."; return; }
+  S.freela.push({d,c:$("#f-c").value.trim().slice(0,60),v});
+  FM=d.slice(0,7); $("#f-c").value=""; $("#f-v").value=""; $("#f-msg").textContent="Rendimento adicionado.";
+  save(); renderFreela(); $("#f-v").focus();
+});
+$("#f-m").addEventListener("change",e=>{FM=e.target.value;renderFreela()});
+$("#f-usar").onclick=()=>{
+  const tot=S.freela.filter(f=>f.d.slice(0,7)===FM).reduce((a,f)=>a+f.v,0);
+  S.extras=Math.round(tot*100)/100; fillInputs(); update();
+  $("#f-msg").textContent=`"Outros ganhos" agora é ${brl(S.extras)} (total do mês escolhido).`;
+};
+$("#f-csv").onclick=()=>{
+  if(!S.freela.length){ $("#f-msg").textContent="Não há rendimentos para baixar."; return; }
+  const linhas=["Data;Cliente/serviço;Valor (R$)"];
+  [...S.freela].sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:0).forEach(f=>linhas.push([dataBR(f.d),csvCell(f.c),String(f.v).replace(".",",")].map((x,i)=>i===1?x:csvCell(x)).join(";")));
+  baixar("rendimentos-freelancer.csv","﻿"+linhas.join("\r\n"),"text/csv;charset=utf-8");
+  $("#f-msg").textContent="Planilha baixada.";
+};
+$("#f-imp").onclick=()=>$("#f-arq").click();
+$("#f-arq").addEventListener("change",e=>lerArquivo(e.target,txt=>{
+  const rows=parseCSV(txt); let ok=0,ign=0;
+  rows.forEach(r=>{
+    const d=dataDoCSV(r[0]||""), v=valorDoCSV(r[2]||"");
+    if(d&&v>0&&S.freela.length<5000){ S.freela.push({d,c:String(r[1]||"").trim().replace(/^'(?=[=+\-@])/,"").slice(0,60),v}); ok++; if(ok===1) FM=d.slice(0,7); }
+    else if(r.some(x=>x.trim())) ign++;
+  });
+  save(); renderFreela();
+  $("#f-msg").textContent=ok?`${ok} linha(s) importada(s).${ign?` ${ign} ignorada(s) (cabeçalho ou dados inválidos).`:""}`:"Nenhuma linha válida encontrada. Use as colunas Data, Cliente/serviço e Valor.";
+},$("#f-msg")));
+
+$("#bk-exp").onclick=()=>{
+  const pacote={app:"handye-eco-finance-tool",versao:1,exportadoEm:new Date().toISOString(),dados:S};
+  baixar(`handye-eco-finance-${hoje()}.json`,JSON.stringify(pacote,null,2),"application/json");
+  $("#bk-msg").textContent="Arquivo baixado. Guarde-o em um lugar seguro: ele tem seus dados financeiros.";
+};
+$("#bk-imp").onclick=()=>$("#bk-arq").click();
+$("#bk-arq").addEventListener("change",e=>lerArquivo(e.target,txt=>{
+  let o; try{ o=JSON.parse(txt); }catch(_){ $("#bk-msg").textContent="Esse arquivo não é um JSON válido."; return; }
+  const dados=o&&typeof o==="object"&&o.dados&&typeof o.dados==="object"?o.dados:o;
+  if(!dados||typeof dados!=="object"||Array.isArray(dados)||!("gastos" in dados||"bruto" in dados||"freela" in dados||"meta" in dados)){
+    $("#bk-msg").textContent="Esse arquivo não parece ser uma exportação deste app."; return;
+  }
+  const novo=limpar(dados);
+  if(!confirm(`Substituir os dados atuais pelos do arquivo?\n(${novo.gastos.length} gastos, ${novo.freela.length} rendimentos de freelancer)`)){ $("#bk-msg").textContent="Importação cancelada."; return; }
+  S=novo; FM=hoje().slice(0,7); fillInputs(); renderGastos(); renderFreela(); update();
+  $("#bk-msg").textContent="Dados importados com sucesso.";
+},$("#bk-msg")));
 document.querySelectorAll("[data-k]").forEach(el=>el.addEventListener("input",()=>{S[el.dataset.k]=num(el.value);update()}));
 $("#tipo").addEventListener("change",e=>{S.tipoRenda=e.target.value;update()});
 document.querySelectorAll("[data-m]").forEach(el=>el.addEventListener("input",()=>{S.meta[el.dataset.m]=num(el.value);update()}));
 $("#add").onclick=()=>{S.gastos.push({n:"",v:0});renderGastos();update();const ins=document.querySelectorAll("#gastos .row");ins[ins.length-1].children[0].focus()};
-$("#reset").onclick=()=>{if(confirm("Apagar todos os dados e começar do zero?")){S=JSON.parse(JSON.stringify(DEFAULT));fillInputs();renderGastos();update()}};
+$("#reset").onclick=()=>{if(confirm("Apagar todos os dados e começar do zero?")){S=JSON.parse(JSON.stringify(DEFAULT));fillInputs();renderGastos();renderFreela();update()}};
 $("#theme").onclick=()=>{
   const cur=document.documentElement.dataset.theme || (matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light");
   const nx=cur==="dark"?"light":"dark"; document.documentElement.dataset.theme=nx;
@@ -414,7 +614,7 @@ $("#theme").onclick=()=>{
 };
 try{const t=localStorage.getItem(KEY+"-theme"); if(t) document.documentElement.dataset.theme=t;}catch(e){}
 
-fillInputs(); renderGastos(); update();
+fillInputs(); renderGastos(); renderFreela(); update();
 if("serviceWorker" in navigator && location.protocol.startsWith("http")) navigator.serviceWorker.register("sw.js").catch(()=>{});
 </script>
 </body>
