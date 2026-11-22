@@ -1,0 +1,12 @@
+{
+  "name": "Handye Eco Finance Tool",
+  "short_name": "Eco Finance",
+  "description": "Salário líquido, gastos, quanto guardar e metas com prazo.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f4f6f5",
+  "theme_color": "#0f766e",
+  "lang": "pt-BR",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}
+

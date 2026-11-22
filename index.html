@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Handye Eco Finance Tool</title>
+<meta name="description" content="Calcule salário líquido, gastos mensais, quanto guardar e metas com prazo.">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<meta name="theme-color" content="#0f766e">
+<style>
+:root{
+  --bg:#f4f6f5; --card:#ffffff; --ink:#14201d; --muted:#5b6b66; --line:#dfe6e3;
+  --brand:#0f766e; --brand-ink:#ffffff; --good:#15803d; --bad:#b91c1c; --warn:#b45309;
+  --soft:#e8f3f1; --radius:14px;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0e1514; --card:#162220; --ink:#e8f0ee; --muted:#9bb0aa; --line:#27403b;
+    --brand:#2dd4bf; --brand-ink:#04211d; --good:#4ade80; --bad:#f87171; --warn:#fbbf24; --soft:#1b302d;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0e1514; --card:#162220; --ink:#e8f0ee; --muted:#9bb0aa; --line:#27403b;
+  --brand:#2dd4bf; --brand-ink:#04211d; --good:#4ade80; --bad:#f87171; --warn:#fbbf24; --soft:#1b302d;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:760px;margin:0 auto;padding:0 16px 80px}
+header{padding:18px 0 8px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+h1{font-size:1.35rem;margin:0}
+h2{font-size:1.1rem;margin:0 0 12px}
+.sub{color:var(--muted);font-size:.9rem;margin:2px 0 0}
+.bar{position:sticky;top:0;z-index:5;background:var(--bg);padding:8px 0;margin-bottom:8px}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 10px;min-width:0}
+.kpi span{display:block;font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
+.kpi b{font-size:1.05rem;display:block;overflow-wrap:anywhere}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin:12px 0}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:520px){.grid{grid-template-columns:1fr}.kpi b{font-size:.95rem}}
+label{display:block;font-size:.85rem;color:var(--muted);margin-bottom:4px}
+input,select{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-height:44px}
+select{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-height:44px}
+input:disabled{opacity:.5}
+select:focus-visible,input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-offset:1px}
+button{font:inherit;cursor:pointer;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);min-height:44px;padding:8px 14px}
+button.primary{background:var(--brand);color:var(--brand-ink);border-color:var(--brand);font-weight:600}
+.row{display:grid;grid-template-columns:1fr 130px 44px;gap:8px;margin-bottom:8px;align-items:center}
+.row button{padding:0}
+.lines div{display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px dashed var(--line)}
+.lines div:last-child{border:0}
+.lines .tot{font-weight:700;border-top:1px solid var(--line);margin-top:4px}
+.neg{color:var(--bad)} .pos{color:var(--good)}
+.note{font-size:.8rem;color:var(--muted);margin-top:10px}
+.status{padding:12px 14px;border-radius:12px;background:var(--soft);margin-top:12px}
+.status.ok{border-left:5px solid var(--good)} .status.no{border-left:5px solid var(--warn)}
+.donut{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.ring{width:130px;height:130px;border-radius:50%;flex:none;position:relative;background:var(--line)}
+.ring::after{content:"";position:absolute;inset:26px;background:var(--card);border-radius:50%}
+.legend{flex:1;min-width:180px;font-size:.88rem}
+.legend div{display:flex;align-items:center;gap:8px;padding:2px 0}
+.dot{width:10px;height:10px;border-radius:50%;flex:none}
+.legend em{margin-left:auto;font-style:normal;color:var(--muted)}
+svg{width:100%;height:auto;display:block}
+.rule{display:grid;gap:8px}
+.rule .r{display:grid;grid-template-columns:90px 1fr 110px;gap:8px;align-items:center;font-size:.88rem}
+.track{height:10px;background:var(--line);border-radius:6px;overflow:hidden}
+.fill{height:100%;background:var(--brand);width:0}
+.tools{display:flex;gap:8px;flex-wrap:wrap}
+.tip{display:inline-grid;place-items:center;width:18px;height:18px;min-height:0;padding:0;margin-left:4px;border-radius:50%;border:1.5px solid var(--brand);background:transparent;color:var(--brand);font:700 11px/1 system-ui,sans-serif;cursor:help;vertical-align:middle;position:relative;text-transform:none;letter-spacing:0}
+.tip::after{content:"";position:absolute;inset:-12px}
+.tip:hover,.tip[aria-expanded="true"]{background:var(--brand);color:var(--brand-ink)}
+#tipbox{position:fixed;z-index:50;background:var(--ink);color:var(--bg);padding:10px 12px;border-radius:10px;font-size:.85rem;line-height:1.4;font-weight:400;box-shadow:0 6px 20px rgba(0,0,0,.3)}
+#tipbox b{display:block;margin-bottom:2px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div>
+    <h1>💰 Handye Eco Finance Tool</h1>
+    <p class="sub">Salário, gastos, quanto guardar e metas com prazo</p>
+  </div>
+  <button id="theme" aria-label="Alternar tema claro/escuro">🌓</button>
+</header>
+
+<div class="bar">
+  <div class="kpis" aria-live="polite">
+    <div class="kpi"><span>Líquido <i data-tip-slot="liquido"></i></span><b id="k-liq">—</b></div>
+    <div class="kpi"><span>Gastos</span><b id="k-gas">—</b></div>
+    <div class="kpi"><span>Sobra <i data-tip-slot="sobra"></i></span><b id="k-sob">—</b></div>
+  </div>
+</div>
+
+<main>
+<section class="card" aria-labelledby="t1">
+  <h2 id="t1">1. Seu salário</h2>
+  <div class="grid">
+    <div style="grid-column:1/-1"><label for="tipo">O valor que você vai informar é: <i data-tip-slot="brutoliq"></i></label><select id="tipo" data-t="tipoRenda"><option value="bruto">Salário fixo bruto (sem desconto de INSS e IR)</option><option value="liquido">Valor líquido (já com os descontos)</option></select></div>
+    <div><label for="bruto"><span id="lbl-bruto">Salário bruto mensal (R$)</span> <i data-tip-slot="brutoliq"></i></label><input id="bruto" type="number" inputmode="decimal" min="0" step="0.01" data-k="bruto"></div>
+    <div><label for="dep">Dependentes (IR) <i data-tip-slot="dep"></i></label><input id="dep" type="number" inputmode="numeric" min="0" step="1" data-k="dependentes"></div>
+    <div><label for="desc">Outros descontos (plano de saúde, VT…) R$ <i data-tip-slot="desc"></i></label><input id="desc" type="number" inputmode="decimal" min="0" step="0.01" data-k="outrosDesc"></div>
+    <div><label for="ext">Outros ganhos líquidos (VR, renda extra…) R$ <i data-tip-slot="extras"></i></label><input id="ext" type="number" inputmode="decimal" min="0" step="0.01" data-k="extras"></div>
+  </div>
+  <div class="lines" style="margin-top:14px" id="sal-lines"></div>
+  <p class="note" id="sal-note"></p>
+</section>
+
+<section class="card" aria-labelledby="t2">
+  <h2 id="t2">2. Quanto você gasta por mês</h2>
+  <div id="gastos"></div>
+  <div class="tools"><button id="add" class="primary" type="button">+ Adicionar gasto</button></div>
+  <div class="donut" style="margin-top:16px">
+    <div class="ring" id="ring" role="img" aria-label="Gráfico de gastos por categoria"></div>
+    <div class="legend" id="legend"></div>
+  </div>
+</section>
+
+<section class="card" aria-labelledby="t3">
+  <h2 id="t3">3. Seu objetivo</h2>
+  <div class="grid">
+    <div><label for="mv">Quanto quer acumular (R$)</label><input id="mv" type="number" inputmode="decimal" min="0" step="100" data-m="valor"></div>
+    <div><label for="mm">Em quantos meses</label><input id="mm" type="number" inputmode="numeric" min="1" step="1" data-m="meses"></div>
+    <div><label for="mi">Já tenho guardado (R$) <i data-tip-slot="guardado"></i></label><input id="mi" type="number" inputmode="decimal" min="0" step="0.01" data-m="inicial"></div>
+    <div><label for="mr">Rendimento esperado (% ao ano) <i data-tip-slot="rend"></i></label><input id="mr" type="number" inputmode="decimal" min="0" step="0.1" data-m="rend"></div>
+  </div>
+  <div id="meta-res" class="status" aria-live="polite"></div>
+  <div class="lines" style="margin-top:14px" id="meta-lines"></div>
+  <svg id="chart" viewBox="0 0 600 240" role="img" aria-label="Evolução do patrimônio ao longo do prazo" style="margin-top:12px"></svg>
+  <p class="note" id="chart-note"></p>
+</section>
+
+<section class="card" aria-labelledby="t4">
+  <h2 id="t4">4. Como está sua divisão (regra 50/30/20) <i data-tip-slot="r5030"></i></h2>
+  <div class="rule" id="rule"></div>
+  <p class="note">Sugestão: 50% necessidades, 30% desejos, 20% poupança. Aqui, "poupança" é a sua sobra mensal. É só uma referência, não uma regra rígida.</p>
+</section>
+
+<div class="tools">
+  <button id="reset" type="button">Limpar tudo</button>
+</div>
+<p class="note">Os cálculos de INSS e IR são estimativas (tabelas no início do arquivo, fáceis de atualizar). Não é consultoria financeira. Os dados ficam só neste aparelho.</p>
+</main>
+</div>
+
+<script>
+/* ====== TABELAS (atualize todo ano) ====== */
+const CFG = {
+  inss: [ // [teto da faixa, alíquota]
+    [1621.00,0.075],[2902.84,0.09],[4354.27,0.12],[8475.55,0.14]
+  ],
+  irrf: [ // [teto da faixa, alíquota, parcela a deduzir]
+    [2428.80,0,0],[2826.65,0.075,182.16],[3751.05,0.15,394.16],[4664.68,0.225,675.49],[Infinity,0.275,908.73]
+  ],
+  depDeducao: 189.59,
+  descSimplificado: 607.20,
+  isencaoAte: 5000.00,          // isenção total até este rendimento
+  reducaoAte: 7350.00,          // redução parcial entre os dois valores
+  reducaoA: 978.62, reducaoB: 0.133145
+};
+
+/* ====== CÁLCULOS ====== */
+function calcINSS(sal){
+  let prev=0, total=0;
+  for(const [teto,al] of CFG.inss){
+    if(sal>prev){ total += (Math.min(sal,teto)-prev)*al; }
+    prev=teto;
+  }
+  return round2(total);
+}
+function irTabela(base){
+  if(base<=0) return 0;
+  for(const [teto,al,ded] of CFG.irrf){ if(base<=teto) return Math.max(0, base*al-ded); }
+  return 0;
+}
+function calcIRRF(bruto, inss, dep){
+  const baseLegal = bruto - inss - dep*CFG.depDeducao;
+  const baseSimpl = bruto - CFG.descSimplificado;
+  let imp = Math.min(irTabela(baseLegal), irTabela(baseSimpl));
+  if(bruto<=CFG.isencaoAte) return 0;
+  if(bruto<=CFG.reducaoAte) imp = Math.max(0, imp - (CFG.reducaoA - CFG.reducaoB*bruto));
+  return round2(imp);
+}
+function round2(x){return Math.round(x*100)/100}
+function monthlyRate(annualPct){return Math.pow(1+annualPct/100,1/12)-1}
+function fvAnnuity(pmt,i,n){return i===0? pmt*n : pmt*(Math.pow(1+i,n)-1)/i}
+function pmtNeeded(target,p0,i,n){
+  const need = target - p0*Math.pow(1+i,n);
+  if(need<=0) return 0;
+  return i===0? need/n : need*i/(Math.pow(1+i,n)-1);
+}
+function monthsToReach(target,p0,pmt,i){
+  if(p0>=target) return 0;
+  let bal=p0;
+  for(let m=1;m<=1200;m++){ bal=bal*(1+i)+pmt; if(bal>=target) return m; }
+  return null;
+}
+
+/* ====== ESTADO ====== */
+const DEFAULT = {
+  tipoRenda:"bruto", bruto:0, dependentes:0, outrosDesc:0, extras:0,
+  gastos:[
+    {n:"Moradia (aluguel/financiamento)",v:0},{n:"Mercado",v:0},{n:"Transporte",v:0},
+    {n:"Contas (luz, água, internet)",v:0},{n:"Lazer",v:0},{n:"Saúde",v:0}
+  ],
+  meta:{valor:0, meses:0, inicial:0, rend:0}
+};
+const KEY="handye-eco-finance-v1";
+let S;
+try{ S = JSON.parse(localStorage.getItem(KEY)) || null; }catch(e){ S=null; }
+if(!S) S = JSON.parse(JSON.stringify(DEFAULT));
+if(S.tipoRenda!=="liquido") S.tipoRenda="bruto";
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+
+const $ = s=>document.querySelector(s);
+const brl = v=> (isFinite(v)?v:0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+const num = v=>{const n=parseFloat(v);return isFinite(n)&&n>=0?n:0};
+const COLORS=["#0f766e","#2563eb","#d97706","#9333ea","#dc2626","#0891b2","#65a30d","#db2777","#64748b","#ca8a04"];
+
+/* ====== BOLINHAS DE AJUDA ====== */
+const TIPS={
+  brutoliq:{t:"Bruto x líquido",d:"Bruto é o valor combinado em contrato, antes de qualquer desconto. Líquido é o que cai na sua conta depois de descontar INSS, Imposto de Renda e outros descontos."},
+  liquido:{t:"Salário líquido",d:"O que realmente cai na sua conta: salário bruto menos INSS, Imposto de Renda e outros descontos, mais ganhos extras."},
+  inss:{t:"INSS",d:"Instituto Nacional do Seguro Social. É uma contribuição obrigatória descontada do salário que garante aposentadoria, auxílio-doença e salário-maternidade. A alíquota é progressiva: de 7,5% a 14%, por faixa de salário."},
+  irrf:{t:"IRRF",d:"Imposto de Renda Retido na Fonte. É o imposto sobre a renda descontado direto do salário pela empresa. O app usa a tabela configurada no código (isenção até R$ 5.000 e desconto parcial até R$ 7.350)."},
+  dep:{t:"Dependentes",d:"Filhos e outras pessoas que você sustenta e declara no Imposto de Renda. Cada dependente reduz a base de cálculo do imposto em R$ 189,59 por mês."},
+  desc:{t:"Outros descontos",d:"Tudo que a empresa desconta além de INSS e IR: plano de saúde, VT (vale-transporte), pensão alimentícia, empréstimo consignado, mensalidade de sindicato etc."},
+  extras:{t:"Outros ganhos",d:"VR é vale-refeição e VA é vale-alimentação. Também vale renda extra, como freelas e aluguel recebido. Informe o valor líquido mensal."},
+  d13:{t:"13º salário",d:"Um salário extra pago todo fim de ano, em duas parcelas. Aqui mostramos o valor bruto aproximado, antes dos descontos."},
+  ferias:{t:"Férias com 1/3",d:"Nas férias você recebe o salário normal mais um adicional de 1/3 (um terço) do salário, previsto na Constituição. Valor bruto aproximado."},
+  sobra:{t:"Sobra",d:"É o salário líquido menos os gastos do mês. Representa o quanto você consegue guardar. Se ficar negativa, você gasta mais do que ganha."},
+  guardado:{t:"Já tenho guardado",d:"Dinheiro que você já separou para esta meta. Ele também rende juros ao longo do prazo."},
+  rend:{t:"Rendimento ao ano",d:"Quanto o dinheiro guardado rende por ano (poupança, CDB, Tesouro Direto…). Use 0 para ignorar rendimento. É só uma estimativa: o rendimento real varia."},
+  juros:{t:"Juros compostos",d:"Os rendimentos também passam a render: é o chamado juros sobre juros. Por isso guardar cedo e com constância faz tanta diferença."},
+  r5030:{t:"Regra 50/30/20",d:"Referência simples para dividir a renda líquida: 50% para necessidades (moradia, comida, contas), 30% para desejos (lazer) e 20% para poupar ou investir."}
+};
+function tipBtn(k){ const t=TIPS[k]; return `<button type="button" class="tip" data-tip="${k}" aria-label="O que é ${t.t}?" aria-expanded="false">i</button>`; }
+document.querySelectorAll("[data-tip-slot]").forEach(s=>{ s.outerHTML=tipBtn(s.dataset.tipSlot); });
+const tipbox=document.createElement("div"); tipbox.id="tipbox"; tipbox.setAttribute("role","tooltip"); tipbox.hidden=true; document.body.appendChild(tipbox);
+let tipAnchor=null, tipPinned=false;
+function placeTip(){
+  const r=tipAnchor.getBoundingClientRect(), w=Math.min(280,innerWidth-24);
+  tipbox.style.width=w+"px";
+  tipbox.style.left=Math.max(12,Math.min(r.left+r.width/2-w/2,innerWidth-w-12))+"px";
+  const h=tipbox.offsetHeight; let top=r.bottom+8;
+  if(top+h>innerHeight-8) top=Math.max(8,r.top-h-8);
+  tipbox.style.top=top+"px";
+}
+function showTip(btn,pin){
+  const t=TIPS[btn.dataset.tip]; if(!t) return;
+  if(tipAnchor&&tipAnchor!==btn){ tipAnchor.setAttribute("aria-expanded","false"); tipAnchor.removeAttribute("aria-describedby"); }
+  tipbox.replaceChildren(); const b=document.createElement("b"), s=document.createElement("span");
+  b.textContent=t.t; s.textContent=t.d; tipbox.append(b,s); tipbox.hidden=false;
+  tipAnchor=btn; tipPinned=pin; btn.setAttribute("aria-expanded","true"); btn.setAttribute("aria-describedby","tipbox"); placeTip();
+}
+function hideTip(){
+  tipbox.hidden=true;
+  if(tipAnchor){ tipAnchor.setAttribute("aria-expanded","false"); tipAnchor.removeAttribute("aria-describedby"); }
+  tipAnchor=null; tipPinned=false;
+}
+document.addEventListener("pointerover",e=>{ if(e.pointerType!=="mouse") return; const b=e.target.closest(".tip"); if(b&&!tipPinned) showTip(b,false); });
+document.addEventListener("pointerout",e=>{ if(e.pointerType!=="mouse"||tipPinned) return; if(e.target.closest(".tip")) hideTip(); });
+document.addEventListener("click",e=>{
+  const b=e.target.closest(".tip");
+  if(b){ e.preventDefault(); if(tipAnchor===b&&tipPinned) hideTip(); else showTip(b,true); }
+  else if(!e.target.closest("#tipbox")) hideTip();
+});
+document.addEventListener("focusin",e=>{ const b=e.target.closest&&e.target.closest(".tip"); if(b&&!tipPinned) showTip(b,false); });
+document.addEventListener("focusout",e=>{ if(!tipPinned&&e.target.closest&&e.target.closest(".tip")) hideTip(); });
+document.addEventListener("keydown",e=>{ if(e.key==="Escape") hideTip(); });
+addEventListener("scroll",()=>{ if(tipAnchor) placeTip(); },true);
+addEventListener("resize",()=>{ if(tipAnchor) placeTip(); });
+
+/* ====== RENDER ====== */
+function fillInputs(){
+  document.querySelectorAll("[data-k]").forEach(el=>el.value=S[el.dataset.k]);
+  $("#tipo").value=S.tipoRenda;
+  document.querySelectorAll("[data-m]").forEach(el=>el.value=S.meta[el.dataset.m]);
+}
+function renderGastos(){
+  const box=$("#gastos"); box.innerHTML="";
+  S.gastos.forEach((g,idx)=>{
+    const r=document.createElement("div"); r.className="row";
+    r.innerHTML=`<input type="text" aria-label="Nome do gasto ${idx+1}" placeholder="Categoria">
+      <input type="number" inputmode="decimal" min="0" step="0.01" aria-label="Valor do gasto ${idx+1}" placeholder="R$">
+      <button type="button" aria-label="Remover gasto ${idx+1}">✕</button>`;
+    const [n,v,b]=r.children;
+    n.value=g.n; v.value=g.v;
+    n.oninput=()=>{g.n=n.value;update()};
+    v.oninput=()=>{g.v=num(v.value);update()};
+    b.onclick=()=>{S.gastos.splice(idx,1);renderGastos();update()};
+    box.appendChild(r);
+  });
+}
+
+function calcAll(){
+  const bruto=num(S.bruto), isLiq=S.tipoRenda==="liquido";
+  const inss=isLiq?0:calcINSS(bruto), irrf=isLiq?0:calcIRRF(bruto,inss,Math.floor(num(S.dependentes)));
+  const liq = bruto-inss-irrf-num(S.outrosDesc)+num(S.extras);
+  const gas = S.gastos.reduce((a,g)=>a+num(g.v),0);
+  return {bruto,inss,irrf,liq,gas,sobra:liq-gas,isLiq};
+}
+
+function update(){
+  if(typeof tipAnchor!=="undefined" && tipAnchor && !document.contains(tipAnchor)) hideTip();
+  const c=calcAll(); save();
+  $("#k-liq").textContent=brl(c.liq);
+  $("#k-gas").textContent=brl(c.gas);
+  const ks=$("#k-sob"); ks.textContent=brl(c.sobra); ks.className=c.sobra<0?"neg":"pos";
+
+  $("#lbl-bruto").textContent = c.isLiq ? "Salário líquido mensal (R$)" : "Salário bruto mensal (R$)";
+  $("#dep").disabled = c.isLiq;
+  $("#sal-lines").innerHTML=`
+    <div><span>${c.isLiq?"Salário líquido informado":"Salário bruto"}</span><span>${brl(c.bruto)}</span></div>
+    ${c.isLiq?"":`<div><span>INSS ${tipBtn("inss")}</span><span class="neg">− ${brl(c.inss)}</span></div>
+    <div><span>Imposto de Renda (IRRF) ${tipBtn("irrf")}</span><span class="neg">− ${brl(c.irrf)}</span></div>`}
+    ${num(S.outrosDesc)?`<div><span>Outros descontos</span><span class="neg">− ${brl(num(S.outrosDesc))}</span></div>`:""}
+    ${num(S.extras)?`<div><span>Outros ganhos</span><span class="pos">+ ${brl(num(S.extras))}</span></div>`:""}
+    <div class="tot"><span>Salário líquido ${tipBtn("liquido")}</span><span>${brl(c.liq)}</span></div>`;
+  $("#sal-note").innerHTML = c.isLiq ? "Valor líquido informado: INSS e IR não são calculados." : c.bruto>0 ? `13º bruto (aprox.) ${tipBtn("d13")}: ${brl(c.bruto)} · Férias com 1/3 (bruto) ${tipBtn("ferias")}: ${brl(c.bruto*4/3)}` : "";
+
+  // gastos / donut
+  const items=S.gastos.filter(g=>num(g.v)>0);
+  let acc=0, stops=[];
+  items.forEach((g,i)=>{const p=num(g.v)/c.gas*100; stops.push(`${COLORS[i%COLORS.length]} ${acc}% ${acc+p}%`); acc+=p;});
+  $("#ring").style.background = items.length? `conic-gradient(${stops.join(",")})` : "var(--line)";
+  const lg=$("#legend"); lg.innerHTML="";
+  items.forEach((g,i)=>{
+    const d=document.createElement("div");
+    d.innerHTML=`<span class="dot" style="background:${COLORS[i%COLORS.length]}"></span><span></span><em>${(num(g.v)/c.gas*100).toFixed(0)}%</em>`;
+    d.children[1].textContent=g.n||"Sem nome";
+    lg.appendChild(d);
+  });
+  if(!items.length) lg.textContent="Adicione seus gastos para ver o gráfico.";
+
+  renderMeta(c); renderRule(c);
+}
+
+function renderMeta(c){
+  const M=S.meta, target=num(M.valor), n=Math.max(1,Math.floor(num(M.meses))), p0=num(M.inicial), i=monthlyRate(num(M.rend));
+  const need=pmtNeeded(target,p0,i,n);
+  const sobra=Math.max(0,c.sobra);
+  const fvSobra = p0*Math.pow(1+i,n)+fvAnnuity(sobra,i,n);
+  const fvNeed = p0*Math.pow(1+i,n)+fvAnnuity(need,i,n);
+  const ok = sobra>=need && target>0;
+  const st=$("#meta-res");
+  st.className="status "+(ok?"ok":"no");
+  if(target<=0){ st.textContent="Informe quanto você quer acumular."; }
+  else if(num(M.meses)<1){ st.textContent="Informe em quantos meses você quer chegar lá."; }
+  else if(need===0){ st.innerHTML=`🎉 Só com o que você já tem e os rendimentos, chega lá em ${n} meses. Nem precisa guardar mais.`; }
+  else if(ok){
+    st.innerHTML=`✅ Para chegar a <b>${brl(target)}</b> em <b>${n} meses</b> você precisa guardar <b>${brl(need)}/mês</b> — cabe na sua sobra (${brl(c.sobra)}).`;
+  } else {
+    const falta=need-sobra;
+    st.innerHTML=`⚠️ Você precisa guardar <b>${brl(need)}/mês</b>, mas sua sobra é <b>${brl(c.sobra)}</b>. Faltam <b>${brl(falta)}/mês</b>: reduza gastos, aumente a renda ou estenda o prazo.`;
+  }
+  const m2=monthsToReach(target,p0,sobra,i);
+  const anos=m=>m>=12?` (${(m/12).toFixed(1).replace(".",",")} anos)`:"";
+  $("#meta-lines").innerHTML=`
+    <div><span>Guardar por mês para a meta</span><span><b>${brl(need)}</b></span></div>
+    <div><span>Total depositado por você</span><span>${brl(p0+need*n)}</span></div>
+    <div><span>Rendimentos estimados ${tipBtn("juros")}</span><span class="pos">${brl(Math.max(0,fvNeed-p0-need*n))}</span></div>
+    <div><span>Se guardar toda a sobra (${brl(sobra)}/mês), em ${n} meses terá</span><span><b>${brl(fvSobra)}</b></span></div>
+    <div><span>Tempo para a meta guardando toda a sobra</span><span>${target<=0?"—":m2===null?"não alcança":m2+" meses"+anos(m2)}</span></div>`;
+  drawChart(target,p0,i,n,need,sobra);
+}
+
+function drawChart(target,p0,i,n,need,sobra){
+  const W=600,H=240,L=8,R=8,T=14,B=26;
+  const series=(pmt)=>{const a=[p0];let b=p0;for(let m=1;m<=n;m++){b=b*(1+i)+pmt;a.push(b)}return a};
+  const a=series(need), b=series(sobra);
+  const max=Math.max(target,...a,...b,1)*1.05;
+  const X=m=>L+(W-L-R)*m/n, Y=v=>H-B-(H-B-T)*v/max;
+  const pts=arr=>arr.map((v,m)=>`${X(m).toFixed(1)},${Y(v).toFixed(1)}`).join(" ");
+  const ty=Y(target);
+  $("#chart").innerHTML=`
+    <line x1="${L}" y1="${H-B}" x2="${W-R}" y2="${H-B}" stroke="var(--line)"/>
+    <line x1="${L}" y1="${ty}" x2="${W-R}" y2="${ty}" stroke="var(--warn)" stroke-dasharray="6 4"/>
+    <text x="${W-R}" y="${ty-5}" text-anchor="end" font-size="12" fill="var(--warn)">Meta ${brl(target)}</text>
+    <polyline points="${pts(b)}" fill="none" stroke="var(--muted)" stroke-width="2" stroke-dasharray="3 3"/>
+    <polyline points="${pts(a)}" fill="none" stroke="var(--brand)" stroke-width="3"/>
+    <text x="${L}" y="${H-8}" font-size="12" fill="var(--muted)">mês 0</text>
+    <text x="${W-R}" y="${H-8}" text-anchor="end" font-size="12" fill="var(--muted)">mês ${n}</text>`;
+  $("#chart-note").textContent="Linha verde: guardando o valor necessário. Linha pontilhada: guardando toda a sua sobra.";
+}
+
+function renderRule(c){
+  const base=c.liq>0?c.liq:0;
+  const rows=[["Gastos",c.gas,"gastos totais vs. 80% (necessidades + desejos)",0.8],["Poupança",Math.max(0,c.sobra),"sobra vs. meta de 20%",0.2]];
+  const box=$("#rule"); box.innerHTML="";
+  rows.forEach(([nm,val,_,ref])=>{
+    const pct=base?val/base*100:0;
+    const r=document.createElement("div"); r.className="r";
+    r.innerHTML=`<span>${nm}</span><div class="track"><div class="fill" style="width:${Math.min(100,pct)}%;background:${nm==="Gastos"?(pct>80?"var(--bad)":"var(--brand)"):(pct>=20?"var(--good)":"var(--warn)")}"></div></div><span>${pct.toFixed(0)}% <small>(ideal ${nm==="Gastos"?"≤80":"≥20"}%)</small></span>`;
+    box.appendChild(r);
+  });
+  const ideal=document.createElement("p"); ideal.className="note";
+  ideal.textContent=base?`20% da sua renda líquida seria ${brl(base*0.2)} por mês.`:"";
+  box.appendChild(ideal);
+}
+
+/* ====== EVENTOS ====== */
+document.querySelectorAll("[data-k]").forEach(el=>el.addEventListener("input",()=>{S[el.dataset.k]=num(el.value);update()}));
+$("#tipo").addEventListener("change",e=>{S.tipoRenda=e.target.value;update()});
+document.querySelectorAll("[data-m]").forEach(el=>el.addEventListener("input",()=>{S.meta[el.dataset.m]=num(el.value);update()}));
+$("#add").onclick=()=>{S.gastos.push({n:"",v:0});renderGastos();update();const ins=document.querySelectorAll("#gastos .row");ins[ins.length-1].children[0].focus()};
+$("#reset").onclick=()=>{if(confirm("Apagar todos os dados e começar do zero?")){S=JSON.parse(JSON.stringify(DEFAULT));fillInputs();renderGastos();update()}};
+$("#theme").onclick=()=>{
+  const cur=document.documentElement.dataset.theme || (matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light");
+  const nx=cur==="dark"?"light":"dark"; document.documentElement.dataset.theme=nx;
+  try{localStorage.setItem(KEY+"-theme",nx)}catch(e){}
+};
+try{const t=localStorage.getItem(KEY+"-theme"); if(t) document.documentElement.dataset.theme=t;}catch(e){}
+
+fillInputs(); renderGastos(); update();
+if("serviceWorker" in navigator && location.protocol.startsWith("http")) navigator.serviceWorker.register("sw.js").catch(()=>{});
+</script>
+</body>
+</html>
+
