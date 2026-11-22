@@ -109,10 +109,10 @@ svg{width:100%;height:auto;display:block}
   <h2 id="t1">1. Seu salário</h2>
   <div class="grid">
     <div style="grid-column:1/-1"><label for="tipo">O valor que você vai informar é: <i data-tip-slot="brutoliq"></i></label><select id="tipo" data-t="tipoRenda"><option value="bruto">Salário fixo bruto (sem desconto de INSS e IR)</option><option value="liquido">Valor líquido (já com os descontos)</option></select></div>
-    <div><label for="bruto"><span id="lbl-bruto">Salário bruto mensal (R$)</span> <i data-tip-slot="brutoliq"></i></label><input id="bruto" type="number" inputmode="decimal" min="0" step="0.01" data-k="bruto"></div>
-    <div><label for="dep">Dependentes (IR) <i data-tip-slot="dep"></i></label><input id="dep" type="number" inputmode="numeric" min="0" step="1" data-k="dependentes"></div>
-    <div><label for="desc">Outros descontos (plano de saúde, VT…) R$ <i data-tip-slot="desc"></i></label><input id="desc" type="number" inputmode="decimal" min="0" step="0.01" data-k="outrosDesc"></div>
-    <div><label for="ext">Outros ganhos líquidos (VR, renda extra…) R$ <i data-tip-slot="extras"></i></label><input id="ext" type="number" inputmode="decimal" min="0" step="0.01" data-k="extras"></div>
+    <div><label for="bruto"><span id="lbl-bruto">Salário bruto mensal (R$):</span> <i data-tip-slot="brutoliq"></i></label><input id="bruto" type="number" inputmode="decimal" min="0" step="0.01" data-k="bruto"></div>
+    <div><label for="dep">Dependentes (IR): <i data-tip-slot="dep"></i></label><input id="dep" type="number" inputmode="numeric" min="0" step="1" data-k="dependentes"></div>
+    <div><label for="desc">Outros descontos (plano de saúde, VT…) R$: <i data-tip-slot="desc"></i></label><input id="desc" type="number" inputmode="decimal" min="0" step="0.01" data-k="outrosDesc"></div>
+    <div><label for="ext">Outros ganhos líquidos (VR, renda extra…) R$: <i data-tip-slot="extras"></i></label><input id="ext" type="number" inputmode="decimal" min="0" step="0.01" data-k="extras"></div>
   </div>
   <div class="lines" style="margin-top:14px" id="sal-lines"></div>
   <p class="note" id="sal-note"></p>
@@ -131,10 +131,10 @@ svg{width:100%;height:auto;display:block}
 <section class="card" aria-labelledby="t3">
   <h2 id="t3">3. Seu objetivo</h2>
   <div class="grid">
-    <div><label for="mv">Quanto quer acumular (R$)</label><input id="mv" type="number" inputmode="decimal" min="0" step="100" data-m="valor"></div>
-    <div><label for="mm">Em quantos meses</label><input id="mm" type="number" inputmode="numeric" min="1" step="1" data-m="meses"></div>
-    <div><label for="mi">Já tenho guardado (R$) <i data-tip-slot="guardado"></i></label><input id="mi" type="number" inputmode="decimal" min="0" step="0.01" data-m="inicial"></div>
-    <div><label for="mr">Rendimento esperado (% ao ano) <i data-tip-slot="rend"></i></label><input id="mr" type="number" inputmode="decimal" min="0" step="0.1" data-m="rend"></div>
+    <div><label for="mv">Quanto quer acumular (R$):</label><input id="mv" type="number" inputmode="decimal" min="0" step="100" data-m="valor"></div>
+    <div><label for="mm">Em quantos meses:</label><input id="mm" type="number" inputmode="numeric" min="1" step="1" data-m="meses"></div>
+    <div><label for="mi">Já tenho guardado (R$): <i data-tip-slot="guardado"></i></label><input id="mi" type="number" inputmode="decimal" min="0" step="0.01" data-m="inicial"></div>
+    <div><label for="mr">Rendimento esperado (% ao ano): <i data-tip-slot="rend"></i></label><input id="mr" type="number" inputmode="decimal" min="0" step="0.1" data-m="rend"></div>
   </div>
   <div id="meta-res" class="status" aria-live="polite"></div>
   <div class="lines" style="margin-top:14px" id="meta-lines"></div>
@@ -157,7 +157,7 @@ svg{width:100%;height:auto;display:block}
     <input id="f-v" type="number" inputmode="decimal" min="0.01" step="0.01" aria-label="Valor recebido em reais" placeholder="R$" required>
     <button class="primary" type="submit" aria-label="Adicionar rendimento">+</button>
   </form>
-  <div style="margin:14px 0 8px"><label for="f-m">Mês</label><select id="f-m"></select></div>
+  <div style="margin:14px 0 8px"><label for="f-m">Mês:</label><select id="f-m"></select></div>
   <div class="frow fhead" aria-hidden="true"><span>Data</span><span>Cliente / serviço</span><span>Valor</span><span></span></div>
   <div id="f-lista"></div>
   <div class="lines" style="margin-top:12px" id="f-res"></div>
@@ -370,7 +370,7 @@ function update(){
   $("#k-gas").textContent=brl(c.gas);
   const ks=$("#k-sob"); ks.textContent=brl(c.sobra); ks.className=c.sobra<0?"neg":"pos";
 
-  $("#lbl-bruto").textContent = c.isLiq ? "Salário líquido mensal (R$)" : "Salário bruto mensal (R$)";
+  $("#lbl-bruto").textContent = c.isLiq ? "Salário líquido mensal (R$):" : "Salário bruto mensal (R$):";
   $("#dep").disabled = c.isLiq;
   $("#sal-lines").innerHTML=`
     <div><span>${c.isLiq?"Salário líquido informado":"Salário bruto"}</span><span>${brl(c.bruto)}</span></div>
@@ -441,8 +441,8 @@ function drawChart(target,p0,i,n,need,sobra){
     <text x="${W-R}" y="${ty-5}" text-anchor="end" font-size="12" fill="var(--warn)">Meta ${brl(target)}</text>
     <polyline points="${pts(b)}" fill="none" stroke="var(--muted)" stroke-width="2" stroke-dasharray="3 3"/>
     <polyline points="${pts(a)}" fill="none" stroke="var(--brand)" stroke-width="3"/>
-    <text x="${L}" y="${H-8}" font-size="12" fill="var(--muted)">mês 0</text>
-    <text x="${W-R}" y="${H-8}" text-anchor="end" font-size="12" fill="var(--muted)">mês ${n}</text>`;
+    <text x="${L}" y="${H-8}" font-size="12" fill="var(--muted)">Mês 0</text>
+    <text x="${W-R}" y="${H-8}" text-anchor="end" font-size="12" fill="var(--muted)">Mês ${n}</text>`;
   $("#chart-note").textContent="Linha verde: guardando o valor necessário. Linha pontilhada: guardando toda a sua sobra.";
 }
 
@@ -453,7 +453,7 @@ function renderRule(c){
   rows.forEach(([nm,val,_,ref])=>{
     const pct=base?val/base*100:0;
     const r=document.createElement("div"); r.className="r";
-    r.innerHTML=`<span>${nm}</span><div class="track"><div class="fill" style="width:${Math.min(100,pct)}%;background:${nm==="Gastos"?(pct>80?"var(--bad)":"var(--brand)"):(pct>=20?"var(--good)":"var(--warn)")}"></div></div><span>${pct.toFixed(0)}% <small>(ideal ${nm==="Gastos"?"≤80":"≥20"}%)</small></span>`;
+    r.innerHTML=`<span>${nm}</span><div class="track"><div class="fill" style="width:${Math.min(100,pct)}%;background:${nm==="Gastos"?(pct>80?"var(--bad)":"var(--brand)"):(pct>=20?"var(--good)":"var(--warn)")}"></div></div><span>${pct.toFixed(0)}% <small>(Ideal ${nm==="Gastos"?"≤80":"≥20"}%)</small></span>`;
     box.appendChild(r);
   });
   const ideal=document.createElement("p"); ideal.className="note";
